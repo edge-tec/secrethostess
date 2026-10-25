@@ -497,7 +497,7 @@ function getAdminHtml() {
           <label for="loginPassword">Password</label>
           <input type="password" id="loginPassword" required placeholder="Enter password">
         </div>
-        <button type="submit" id="loginSubmitBtn" class="btn btn-primary" style="margin-top:8px;height:44px;font-size:14px;">
+        <button type="submit" id="loginSubmitBtn" onclick="window.handleAdminLogin(event)" class="btn btn-primary" style="margin-top:8px;height:44px;font-size:14px;">
           🔐 Sign In
         </button>
       </form>
@@ -614,11 +614,28 @@ function getAdminHtml() {
       return localStorage.getItem('sh_admin_token') || '';
     }
 
-    async function handleAdminLogin() {
-      const email = document.getElementById('loginEmail').value.trim();
-      const password = document.getElementById('loginPassword').value.trim();
+    window.handleAdminLogin = async function(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      const emailEl = document.getElementById('loginEmail');
+      const passEl = document.getElementById('loginPassword');
       const errBox = document.getElementById('loginError');
+      const btn = document.getElementById('loginSubmitBtn');
+
+      const email = (emailEl ? emailEl.value : '').trim();
+      const password = (passEl ? passEl.value : '').trim();
+
       errBox.style.display = 'none';
+
+      if (!email || !password) {
+        errBox.textContent = 'Please enter both email and password.';
+        errBox.style.display = 'block';
+        return;
+      }
+
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = '⏳ Signing in...';
+      }
 
       try {
         const res = await fetch('/api/admin/login', {
@@ -638,10 +655,15 @@ function getAdminHtml() {
       } catch (e) {
         errBox.textContent = 'Connection error: ' + e.message;
         errBox.style.display = 'block';
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = '🔐 Sign In';
+        }
       }
-    }
+    };
 
-    async function handleAdminLogout() {
+    window.handleAdminLogout = async function() {
       const token = getAuthToken();
       if (token) {
         await fetch('/api/admin/logout', {
@@ -769,7 +791,7 @@ function getAdminHtml() {
 
       const data = await res.json();
       if (data.success) {
-        alert('License Key Created Successfully!\nKey: ' + data.record.key);
+        alert('License Key Created Successfully! Key: ' + data.record.key);
         document.getElementById('newClientName').value = '';
         fetchKeys();
       } else {
