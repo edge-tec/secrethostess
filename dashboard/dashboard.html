@@ -70,11 +70,12 @@
           <p id="page-subtitle">Manage accounts, track posting progress, and run multi-city queue.</p>
         </div>
         <div class="topbar-right">
-          <div class="status-chip" id="top-license-chip" style="border-color:#e11d48;">
+          <div class="status-chip" id="top-license-chip" style="border-color:#e11d48;cursor:pointer;display:inline-flex;align-items:center;" title="Click to refresh credits and license from server">
             <span class="chip-label">🔑 Credits Left:</span>
             <span class="chip-val text-green" id="top-license-credits">100</span>
             <span class="chip-label" style="margin-left:6px;">| Days:</span>
             <span class="chip-val text-yellow" id="top-license-days">30</span>
+            <span id="top-sync-icon" style="margin-left:6px;font-size:12px;display:inline-block;" title="Refresh License">🔄</span>
           </div>
           <div class="status-chip" id="top-city-chip">
             <span class="chip-label">Current City:</span>

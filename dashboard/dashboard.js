@@ -151,6 +151,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         pageTitle.textContent = meta.title;
         pageSubtitle.textContent = meta.subtitle;
       }
+
+      if (targetId === "tab-license" && typeof syncLicense === "function") {
+        syncLicense(false);
+      }
     });
   });
 
@@ -717,8 +721,55 @@ document.addEventListener("DOMContentLoaded", async () => {
     await loadState();
   });
 
+  // Real-time License Sync Function
+  let isSyncingLicense = false;
+  async function syncLicense(showNotification = false) {
+    if (isSyncingLicense) return;
+    const key = (licKeyInput.value || "").trim().toUpperCase() || (currentState.license && currentState.license.key);
+    if (!key) return;
+
+    isSyncingLicense = true;
+    const syncIcon = document.getElementById("top-sync-icon");
+    if (syncIcon) syncIcon.style.animation = "spin 0.8s linear infinite";
+
+    try {
+      const res = await chrome.runtime.sendMessage({
+        type: "VERIFY_LICENSE",
+        key,
+        serverUrl: licServerUrl.value.trim() || "https://bot.mailszo.com"
+      });
+      await loadState();
+      if (showNotification && res) {
+        if (res.valid) {
+          showToast(`License Synced: ${res.isUnlimited ? "Unlimited" : res.creditsRemaining + " Credits"}, ${res.daysRemaining}d Left`);
+        } else {
+          showToast(res.message || "License Expired or Invalid");
+        }
+      }
+    } catch (err) {
+      console.warn("License auto-sync notice:", err);
+    } finally {
+      isSyncingLicense = false;
+      if (syncIcon) syncIcon.style.animation = "none";
+    }
+  }
+
+  // Top license chip click to manually sync
+  const topLicChip = document.getElementById("top-license-chip");
+  if (topLicChip) {
+    topLicChip.addEventListener("click", () => syncLicense(true));
+  }
+
+  // Window focus auto-sync (e.g. when user switches back from admin dashboard)
+  window.addEventListener("focus", () => syncLicense(false));
+
   // Initial load
   await loadState(true);
-  // Auto-sync polling every 2 seconds
+  await syncLicense(false);
+
+  // Auto-sync state polling every 2 seconds
   setInterval(loadState, 2000);
+
+  // Real-time server license verification every 10 seconds
+  setInterval(() => syncLicense(false), 10000);
 });
