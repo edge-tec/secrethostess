@@ -296,24 +296,38 @@ const server = http.createServer(async (req, res) => {
         return sendJson(res, 404, { success: false, message: "Key not found." });
       }
 
-      // Add credits
+      // Edit Client Name & Notes
+      if (body.clientName) {
+        record.clientName = body.clientName.trim();
+      }
+      if (body.notes !== undefined) {
+        record.notes = body.notes.trim();
+      }
+
+      // Add or Set credits
       if (body.addCredits) {
         record.totalCredits += parseInt(body.addCredits, 10);
       }
       if (body.setCredits !== undefined) {
         record.totalCredits = parseInt(body.setCredits, 10);
+      }
+      if (body.resetUsed) {
         record.usedCredits = 0;
       }
 
-      // Extend days
-      if (body.addDays) {
+      // Set Validity or Extend days
+      if (body.setDaysFromNow !== undefined && !isNaN(body.setDaysFromNow)) {
+        const base = new Date();
+        base.setDate(base.getDate() + parseInt(body.setDaysFromNow, 10));
+        record.expiresAt = base.toISOString();
+      } else if (body.addDays) {
         const curExp = new Date(record.expiresAt);
         const base = curExp.getTime() > Date.now() ? curExp : new Date();
         base.setDate(base.getDate() + parseInt(body.addDays, 10));
         record.expiresAt = base.toISOString();
       }
 
-      // Toggle active status
+      // Toggle active status & Unlimited mode
       if (body.active !== undefined) {
         record.active = !!body.active;
       }
@@ -529,6 +543,7 @@ function getAdminHtml() {
   <script>
     const secretInput = document.getElementById('adminSecretInput');
     const tableBody = document.getElementById('keysTableBody');
+    let currentLoadedKeys = [];
 
     async function fetchKeys() {
       try {
@@ -550,6 +565,7 @@ function getAdminHtml() {
     }
 
     function renderKeys(keys) {
+      currentLoadedKeys = keys || [];
       document.getElementById('statTotalKeys').textContent = keys.length;
       document.getElementById('statActiveKeys').textContent = keys.filter(k => k.active && !k.isExpired).length;
 
@@ -590,6 +606,7 @@ function getAdminHtml() {
             <td><strong style="color:\${k.daysRemaining <= 5 ? 'var(--red)' : 'var(--green)'}">\${k.daysRemaining} Days</strong></td>
             <td>\${credText}</td>
             <td class="actions-cell">
+              <button class="btn btn-secondary btn-sm" onclick="openEditModal('\${k.key}')" title="Edit Package">✏️ Edit</button>
               <button class="btn btn-secondary btn-sm" onclick="rechargeKey('\${k.key}')" title="Recharge Credits">+ Credits</button>
               <button class="btn btn-secondary btn-sm" onclick="extendKey('\${k.key}')" title="Extend 30 Days">+30 Days</button>
               <button class="btn btn-danger btn-sm" onclick="deleteKey('\${k.key}')" title="Delete">🗑</button>
@@ -684,10 +701,143 @@ function getAdminHtml() {
       }
     };
 
+    window.openEditModal = function(key) {
+      const k = currentLoadedKeys.find(item => item.key === key);
+      if (!k) return;
+
+      document.getElementById('editKey').value = k.key;
+      document.getElementById('editKeyDisplay').value = k.key;
+      document.getElementById('editClientName').value = k.clientName || '';
+      document.getElementById('editPlanType').value = k.isUnlimited ? 'unlimited' : 'credits';
+      document.getElementById('editCredits').value = k.isUnlimited ? 100 : (k.totalCredits || 100);
+      document.getElementById('editResetUsed').checked = false;
+      document.getElementById('editValidityDays').value = k.daysRemaining !== undefined ? k.daysRemaining : 30;
+      document.getElementById('editStatus').value = k.active ? 'true' : 'false';
+      document.getElementById('editNotes').value = k.notes || '';
+
+      toggleEditCredits();
+      document.getElementById('editPackageModal').style.display = 'flex';
+    };
+
+    window.closeEditModal = function() {
+      document.getElementById('editPackageModal').style.display = 'none';
+    };
+
+    window.toggleEditCredits = function() {
+      const isCredits = document.getElementById('editPlanType').value === 'credits';
+      document.getElementById('editCreditsRow').style.display = isCredits ? 'block' : 'none';
+    };
+
+    window.saveEditedPackage = async function() {
+      const key = document.getElementById('editKey').value;
+      const clientName = document.getElementById('editClientName').value.trim();
+      const isUnlimited = document.getElementById('editPlanType').value === 'unlimited';
+      const credits = parseInt(document.getElementById('editCredits').value, 10);
+      const resetUsed = document.getElementById('editResetUsed').checked;
+      const validityDays = parseInt(document.getElementById('editValidityDays').value, 10);
+      const active = document.getElementById('editStatus').value === 'true';
+      const notes = document.getElementById('editNotes').value.trim();
+
+      const payload = {
+        adminSecret: secretInput.value.trim(),
+        key,
+        clientName,
+        isUnlimited,
+        active,
+        notes
+      };
+
+      if (!isUnlimited && !isNaN(credits)) {
+        payload.setCredits = credits;
+        if (resetUsed) payload.resetUsed = true;
+      }
+      if (!isNaN(validityDays)) {
+        payload.setDaysFromNow = validityDays;
+      }
+
+      const res = await fetch('/api/admin/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        alert('Package successfully updated for ' + key + '!');
+        closeEditModal();
+        fetchKeys();
+      } else {
+        alert('Failed to update package: ' + data.message);
+      }
+    };
+
     document.getElementById('refreshBtn').addEventListener('click', fetchKeys);
     secretInput.addEventListener('change', fetchKeys);
     fetchKeys();
   </script>
+
+  <!-- Edit Package Modal Dialog -->
+  <div id="editPackageModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);backdrop-filter:blur(5px);z-index:9999;align-items:center;justify-content:center;">
+    <div style="background:#0f172a;border:1px solid #334155;border-radius:12px;padding:24px;width:90%;max-width:480px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.7);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h3 style="margin:0;font-size:17px;color:#fff;">✏️ Edit License Package</h3>
+        <button onclick="closeEditModal()" style="background:none;border:none;color:#94a3b8;font-size:22px;cursor:pointer;">&times;</button>
+      </div>
+
+      <input type="hidden" id="editKey">
+
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div>
+          <label style="display:block;margin-bottom:4px;">License Key:</label>
+          <input type="text" id="editKeyDisplay" readonly style="width:100%;background:#090d16;color:#38bdf8;font-family:'JetBrains Mono',monospace;">
+        </div>
+
+        <div>
+          <label style="display:block;margin-bottom:4px;">Client / User Name:</label>
+          <input type="text" id="editClientName" style="width:100%;">
+        </div>
+
+        <div>
+          <label style="display:block;margin-bottom:4px;">Package / Plan:</label>
+          <select id="editPlanType" style="width:100%;" onchange="toggleEditCredits()">
+            <option value="unlimited">Unlimited (No Post Limits)</option>
+            <option value="credits">Credit-Based (Fixed Number of Posts)</option>
+          </select>
+        </div>
+
+        <div id="editCreditsRow" style="display:none;">
+          <label style="display:block;margin-bottom:4px;">Total Post Credits:</label>
+          <input type="number" id="editCredits" style="width:100%;" min="1" placeholder="e.g. 100">
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#94a3b8;margin-top:6px;">
+            <input type="checkbox" id="editResetUsed"> Reset used credits to 0
+          </label>
+        </div>
+
+        <div>
+          <label style="display:block;margin-bottom:4px;">Validity Left (Days from today):</label>
+          <input type="number" id="editValidityDays" style="width:100%;" min="1" placeholder="e.g. 30 for 1 Month, 60 for 2 Months">
+        </div>
+
+        <div>
+          <label style="display:block;margin-bottom:4px;">Status:</label>
+          <select id="editStatus" style="width:100%;">
+            <option value="true">Active</option>
+            <option value="false">Suspended / Disabled</option>
+          </select>
+        </div>
+
+        <div>
+          <label style="display:block;margin-bottom:4px;">Plan Tag / Note:</label>
+          <input type="text" id="editNotes" style="width:100%;" placeholder="e.g. VIP Monthly Plan">
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;">
+        <button class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveEditedPackage()">💾 Save Package Changes</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>`;
 }
