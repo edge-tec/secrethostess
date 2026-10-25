@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SecretHostess Auto Poster Pro - Dashboard</title>
+  <link rel="stylesheet" href="dashboard.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-badge">SH</div>
+        <div class="brand-text">
+          <h2>SecretHostess</h2>
+          <span>Auto Poster Pro</span>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <button class="nav-item active" data-tab="tab-accounts">
+          <span class="icon">👥</span>
+          <span>Accounts Queue</span>
+          <span class="badge" id="nav-count-accounts">0</span>
+        </button>
+        <button class="nav-item" data-tab="tab-license">
+          <span class="icon">🔑</span>
+          <span>License & Credits</span>
+          <span class="badge" id="nav-badge-credits" style="background:#e11d48;color:white;">Active</span>
+        </button>
+        <button class="nav-item" data-tab="tab-template">
+          <span class="icon">📝</span>
+          <span>Listing Content</span>
+        </button>
+        <button class="nav-item" data-tab="tab-settings">
+          <span class="icon">⚙️</span>
+          <span>City & Automation</span>
+        </button>
+        <button class="nav-item" data-tab="tab-logs">
+          <span class="icon">📜</span>
+          <span>Activity Logs</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-status">
+        <div class="status-indicator-box">
+          <div class="pulse-dot idle" id="global-pulse"></div>
+          <div>
+            <div class="status-title" id="global-status-text">Status: Idle</div>
+            <div class="status-sub" id="global-curr-info">Ready to start</div>
+          </div>
+        </div>
+        <div class="quick-controls">
+          <button id="quick-start-btn" class="btn btn-primary btn-sm">▶ Start Queue</button>
+          <button id="quick-stop-btn" class="btn btn-danger btn-sm" style="display: none;">⏹ Stop</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Top Bar -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <h1 id="page-title">Accounts Queue</h1>
+          <p id="page-subtitle">Manage accounts, track posting progress, and run multi-city queue.</p>
+        </div>
+        <div class="topbar-right">
+          <div class="status-chip" id="top-license-chip" style="border-color:#e11d48;">
+            <span class="chip-label">🔑 Credits Left:</span>
+            <span class="chip-val text-green" id="top-license-credits">100</span>
+            <span class="chip-label" style="margin-left:6px;">| Days:</span>
+            <span class="chip-val text-yellow" id="top-license-days">30</span>
+          </div>
+          <div class="status-chip" id="top-city-chip">
+            <span class="chip-label">Current City:</span>
+            <span class="chip-val text-cyan" id="top-city-val">USA Rotating (Index 1)</span>
+          </div>
+          <button id="save-all-btn" class="btn btn-success">
+            💾 Save All Changes
+          </button>
+        </div>
+      </header>
+
+      <!-- TAB 1: ACCOUNTS QUEUE -->
+      <section id="tab-accounts" class="tab-pane active">
+        <!-- Stats Row -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-label">Total Accounts</div>
+            <div class="metric-val" id="metric-total">0</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Pending</div>
+            <div class="metric-val text-yellow" id="metric-pending">0</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Successfully Posted</div>
+            <div class="metric-val text-green" id="metric-completed">0</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Failed / Issues</div>
+            <div class="metric-val text-red" id="metric-failed">0</div>
+          </div>
+        </div>
+
+        <!-- Add Accounts Card -->
+        <div class="card">
+          <div class="card-header">
+            <h3>➕ Add Accounts (বাল্ক একাউন্ট যোগ করুন)</h3>
+            <span class="card-hint">Paste accounts in <code>username:password</code> format (one per line)</span>
+          </div>
+          <div class="card-body">
+            <textarea id="bulk-accounts-input" class="form-textarea" rows="4" placeholder="user1:password123&#10;user2:password456&#10;user3:password789"></textarea>
+            <div class="btn-group mt-2">
+              <button id="add-bulk-accounts-btn" class="btn btn-primary">➕ Add to Queue</button>
+              <button id="clear-accounts-input-btn" class="btn btn-secondary">Clear Input</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Accounts Table Card -->
+        <div class="card">
+          <div class="card-header space-between">
+            <div>
+              <h3>📋 Accounts in Queue</h3>
+              <span class="card-hint">Each account logs in, posts to the next USA city sequentially, and logs out.</span>
+            </div>
+            <div class="table-actions">
+              <button id="reset-statuses-btn" class="btn btn-warning btn-sm" title="Reset all to Pending">🔄 Reset Statuses</button>
+              <button id="clear-all-accounts-btn" class="btn btn-danger btn-sm" title="Remove all accounts">🗑 Clear All</button>
+            </div>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-wrapper">
+              <table class="data-table" id="accounts-table">
+                <thead>
+                  <tr>
+                    <th width="50">#</th>
+                    <th>Username</th>
+                    <th>Password</th>
+                    <th width="120">Status</th>
+                    <th>City Posted</th>
+                    <th>Last Time</th>
+                    <th>Error / Info</th>
+                    <th width="90">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="accounts-tbody">
+                  <tr class="empty-row">
+                    <td colspan="8">No accounts in queue. Add accounts above to get started.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      <!-- TAB: LICENSE & CREDITS -->
+      <section id="tab-license" class="tab-pane">
+        <!-- License Metrics -->
+        <div class="metrics-grid">
+          <div class="metric-card" style="border-left: 3px solid #e11d48;">
+            <div class="metric-label">License Status</div>
+            <div class="metric-val text-green" id="dash-lic-status">Active</div>
+          </div>
+          <div class="metric-card" style="border-left: 3px solid #38bdf8;">
+            <div class="metric-label">Remaining Post Credits</div>
+            <div class="metric-val text-cyan" id="dash-lic-credits">100</div>
+          </div>
+          <div class="metric-card" style="border-left: 3px solid #f59e0b;">
+            <div class="metric-label">Validity Left (Days)</div>
+            <div class="metric-val text-yellow" id="dash-lic-days">30 Days</div>
+          </div>
+          <div class="metric-card" style="border-left: 3px solid #a855f7;">
+            <div class="metric-label">Posts Consumed</div>
+            <div class="metric-val" id="dash-lic-consumed">0</div>
+          </div>
+        </div>
+
+        <!-- License Key Configuration Card -->
+        <div class="card">
+          <div class="card-header">
+            <h3>🔑 Client License Key Activation (লাইসেন্স কি অ্যাক্টিভেশন)</h3>
+            <span class="card-hint">Enter your purchased License Key to enable posting. 1 Post = 1 Credit consumed.</span>
+          </div>
+          <div class="card-body form-grid">
+            <div class="form-group full-width">
+              <label for="lic-key-input">License Key (লাইসেন্স কি):</label>
+              <input type="text" id="lic-key-input" class="form-input" placeholder="e.g. SHP-DEMO-8899-AABB-1122" style="font-family:'JetBrains Mono',monospace;font-size:15px;letter-spacing:1px;">
+            </div>
+
+            <div class="form-group">
+              <label for="lic-server-url">License Server API URL:</label>
+              <input type="text" id="lic-server-url" class="form-input" value="http://localhost:3000" placeholder="http://localhost:3000 or https://your-api.com">
+              <span class="text-muted text-xs">Default local server is http://localhost:3000</span>
+            </div>
+
+            <div class="form-group" style="justify-content: flex-end;">
+              <button id="verify-license-btn" class="btn btn-primary" style="height: 42px;">
+                🚀 Verify & Activate License Key
+              </button>
+            </div>
+
+            <div class="form-group full-width highlighted-box" id="license-details-box">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                  <h4 style="font-size:14px;color:#fff;" id="lic-client-name">Owner: Demo VIP User</h4>
+                  <p class="text-muted text-xs mt-1" id="lic-expiry-text">Expires: Checking...</p>
+                </div>
+                <div class="badge-status badge-completed" id="lic-valid-pill">VALID</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Admin Control & Guide Card -->
+        <div class="card">
+          <div class="card-header space-between">
+            <div>
+              <h3>👑 Admin License Control Portal (এডমিন লাইসেন্স ও ক্রেডিট কন্ট্রোল)</h3>
+              <span class="card-hint">এডমিন হিসেবে নতুন লাইসেন্স কি তৈরি, মেয়াদ (১ মাস/কাস্টম) দেওয়া এবং ক্রেডিট রিচার্জ করার গাইড।</span>
+            </div>
+            <a href="http://localhost:3000/admin" target="_blank" class="btn btn-secondary btn-sm" id="open-admin-portal-btn">
+              🌐 Open Admin Portal (Web UI)
+            </a>
+          </div>
+          <div class="card-body">
+            <div style="line-height: 1.8; color: #cbd5e1; font-size: 13px;">
+              <p><strong>এডমিন যেভাবে লাইসেন্স কি ও ক্রেডিট পরিচালনা করবেন:</strong></p>
+              <ol style="margin-left: 20px; margin-top: 8px;">
+                <li>টার্মিনালে সার্ভার ডিরেক্টরিতে গিয়ে রান করুন: <code>node server/server.js</code> (এটি পোর্ট ৩০০০ এ রান হবে)।</li>
+                <li>যেকোনো ব্রাউজারে যান: <strong><a href="http://localhost:3000/admin" target="_blank" style="color:#38bdf8;">http://localhost:3000/admin</a></strong> (এডমিন পাসওয়ার্ড: <code>admin123</code>)।</li>
+                <li><strong>নতুন কি তৈরি (Generate Key):</strong> ক্লায়েন্টের নাম, মেয়াদ (১ মাস, ২ মাস, ১ বছর) এবং ক্রেডিট (যেমন: ৫০, ১০০, ৫০০ বা আনলিমিটেড) নির্ধারণ করে <em>Generate License Key</em> এ ক্লিক করলেই সাথে সাথে কিউআর ও কোড কি তৈরি হবে।</li>
+                <li><strong>ক্রেডিট রিচার্জ (Recharge Credits):</strong> ক্লায়েন্টের ক্রেডিট শেষ হয়ে গেলে এডমিন পোর্টাল থেকে এক ক্লিকে <strong>+ Credits</strong> দিয়ে ৫০ বা ১০০ ক্রেডিট যুক্ত করে দিতে পারবেন।</li>
+                <li><strong>মেয়াদ বাড়ানো (Extend Expiry):</strong> ক্লায়েন্টের ১ মাস শেষ হলে <strong>+30 Days</strong> বাটনে ক্লিক করে মেয়াদ ১ মাস করে বাড়িয়ে দেওয়া যাবে।</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: LISTING CONTENT TEMPLATE -->
+      <section id="tab-template" class="tab-pane">
+        <!-- Part 1: Listing Details -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Part 1: Listing Details (লিস্টিংয়ের বিবরণ)</h3>
+          </div>
+          <div class="card-body form-grid">
+            <div class="form-group full-width">
+              <label for="tmpl-title">Title*</label>
+              <input type="text" id="tmpl-title" class="form-input" placeholder="Enter listing title">
+            </div>
+
+            <div class="form-group full-width">
+              <label for="tmpl-desc">Description* (Supports formatted text / HTML)</label>
+              <textarea id="tmpl-desc" class="form-textarea" rows="5" placeholder="Enter full description..."></textarea>
+            </div>
+
+            <div class="form-group full-width">
+              <label for="tmpl-short-desc">Short Description*</label>
+              <textarea id="tmpl-short-desc" class="form-textarea" rows="2" placeholder="Enter short summary..."></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="tmpl-age">Age*</label>
+              <input type="number" id="tmpl-age" class="form-input" min="18" max="99" value="26">
+            </div>
+
+            <div class="form-group">
+              <label for="tmpl-category">Category*</label>
+              <select id="tmpl-category" class="form-select">
+                <option value="Escorts">Escorts</option>
+                <option value="Body Rubs">Body Rubs</option>
+                <option value="Strippers">Strippers</option>
+                <option value="Adult Entertainment">Adult Entertainment</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Part 2: Contact Details & City Rotation -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Part 2: Contact Details & City Rotation (যোগাযোগ ও সিটি রোটেশন)</h3>
+          </div>
+          <div class="card-body form-grid">
+            <div class="form-group">
+              <label for="tmpl-country">Country*</label>
+              <select id="tmpl-country" class="form-select">
+                <option value="USA" selected>USA</option>
+                <option value="Canada">Canada</option>
+                <option value="United Kingdom">United Kingdom</option>
+                <option value="Australia">Australia</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="tmpl-mobile">Mobile*</label>
+              <input type="text" id="tmpl-mobile" class="form-input" placeholder="e.g. 5645687964">
+            </div>
+
+            <div class="form-group full-width highlighted-box">
+              <label class="font-bold">🇺🇸 USA City Rotation Mode (সিটি রোটেশন পদ্ধতি):</label>
+              <p class="text-muted text-sm mb-2">
+                ইউজারের চাহিদা অনুযায়ী: <strong>১ সিটিতে ১ টি পুস্ট করার পর পরের একাউন্টে পরের সিটি স্বয়ংক্রিয়ভাবে সিলেক্ট হবে।</strong>
+              </p>
+              <div class="radio-group">
+                <label class="radio-label">
+                  <input type="radio" name="city-rotation-mode" value="sequential" checked id="mode-seq">
+                  <span><strong>Sequential Dropdown Rotation (স্বয়ংক্রিয় ধারাবাহিক রোটেশন)</strong> — SecretHostess এর ড্রপডাউনের প্রতিটি সিটি পর্যায়ক্রমে সিলেক্ট করবে (Abbeville AL, etc.)</span>
+                </label>
+                <label class="radio-label">
+                  <input type="radio" name="city-rotation-mode" value="custom" id="mode-custom">
+                  <span><strong>Custom City Target List (কাস্টম পছন্দের সিটি লিস্ট)</strong> — শুধুমাত্র নিচে দেয়া সিটিগুলোতে একের পর এক পুস্ট করবে</span>
+                </label>
+              </div>
+
+              <div id="custom-cities-wrapper" style="display: none; margin-top: 10px;">
+                <label for="tmpl-custom-cities" class="text-sm">Enter Custom Cities (One per line or comma-separated):</label>
+                <textarea id="tmpl-custom-cities" class="form-textarea" rows="3" placeholder="Miami, New York, Los Angeles, Houston, Chicago, Dallas, Atlanta"></textarea>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="tmpl-suburb">Suburb (Optional)</label>
+              <input type="text" id="tmpl-suburb" class="form-input" placeholder="Suburb if applicable">
+            </div>
+          </div>
+        </div>
+
+        <!-- Part 3: Extra Contact Details -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Part 3: Extra Contact Details</h3>
+          </div>
+          <div class="card-body form-grid">
+            <div class="form-group">
+              <label for="tmpl-location">Location</label>
+              <input type="text" id="tmpl-location" class="form-input" placeholder="e.g. Downtown">
+            </div>
+            <div class="form-group">
+              <label for="tmpl-email">Email</label>
+              <input type="email" id="tmpl-email" class="form-input" placeholder="e.g. yourname@gmail.com">
+            </div>
+            <div class="form-group">
+              <label for="tmpl-website">Website</label>
+              <input type="text" id="tmpl-website" class="form-input" placeholder="https://...">
+            </div>
+            <div class="form-group">
+              <label for="tmpl-facebook">Facebook</label>
+              <input type="text" id="tmpl-facebook" class="form-input" placeholder="Facebook handle or link">
+            </div>
+          </div>
+        </div>
+
+        <!-- Part 4: Appearance -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Part 4: Appearance (শারীরিক বিবরণ)</h3>
+          </div>
+          <div class="card-body form-grid">
+            <div class="form-group">
+              <label for="tmpl-height">Height(cm)</label>
+              <input type="number" id="tmpl-height" class="form-input" value="165">
+            </div>
+            <div class="form-group">
+              <label for="tmpl-weight">Weight(KG)</label>
+              <input type="number" id="tmpl-weight" class="form-input" value="55">
+            </div>
+            <div class="form-group">
+              <label for="tmpl-bust">Bust Size</label>
+              <select id="tmpl-bust" class="form-select">
+                <option value="32A">32A</option>
+                <option value="32B">32B</option>
+                <option value="34B">34B</option>
+                <option value="34C" selected>34C</option>
+                <option value="34D">34D</option>
+                <option value="36C">36C</option>
+                <option value="36D">36D</option>
+                <option value="38D">38D</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="tmpl-body-type">Body Type</label>
+              <select id="tmpl-body-type" class="form-select">
+                <option value="Slim" selected>Slim</option>
+                <option value="Athletic">Athletic</option>
+                <option value="Curvy">Curvy</option>
+                <option value="Average">Average</option>
+                <option value="Petite">Petite</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="tmpl-ethnicity">Ethnicity</label>
+              <select id="tmpl-ethnicity" class="form-select">
+                <option value="Caucasian" selected>Caucasian</option>
+                <option value="Asian">Asian</option>
+                <option value="Latino/Hispanic">Latino/Hispanic</option>
+                <option value="Black/Ebony">Black/Ebony</option>
+                <option value="Middle Eastern">Middle Eastern</option>
+                <option value="Mixed">Mixed</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="tmpl-hair">Hair Colour</label>
+              <select id="tmpl-hair" class="form-select">
+                <option value="Blonde" selected>Blonde</option>
+                <option value="Brown">Brown</option>
+                <option value="Black">Black</option>
+                <option value="Red">Red</option>
+                <option value="Auburn">Auburn</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="tmpl-eye">Eye Color</label>
+              <select id="tmpl-eye" class="form-select">
+                <option value="Blue" selected>Blue</option>
+                <option value="Brown">Brown</option>
+                <option value="Green">Green</option>
+                <option value="Hazel">Hazel</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="tmpl-skin">Skin Colour</label>
+              <select id="tmpl-skin" class="form-select">
+                <option value="Fair" selected>Fair</option>
+                <option value="Tanned">Tanned</option>
+                <option value="Olive">Olive</option>
+                <option value="Dark">Dark</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="tmpl-dress">Dress Size</label>
+              <select id="tmpl-dress" class="form-select">
+                <option value="Small" selected>Small</option>
+                <option value="Medium">Medium</option>
+                <option value="Large">Large</option>
+                <option value="6">6</option>
+                <option value="8">8</option>
+                <option value="10">10</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="tmpl-breast">Breast Type</label>
+              <select id="tmpl-breast" class="form-select">
+                <option value="Natural" selected>Natural</option>
+                <option value="Enhanced">Enhanced</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Part 5, 6, 7: In-Call/Out-Call, Clients, Services -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Part 5, 6, 7: Service Options & Clients</h3>
+          </div>
+          <div class="card-body">
+            <!-- In-Call / Out-Call -->
+            <div class="checkbox-section">
+              <div class="section-subtitle">In-Call / Out-Call:</div>
+              <div class="checkbox-row">
+                <label class="custom-checkbox">
+                  <input type="checkbox" id="tmpl-incall" checked>
+                  <span>In-Call</span>
+                </label>
+                <label class="custom-checkbox">
+                  <input type="checkbox" id="tmpl-outcall" checked>
+                  <span>Out-Call</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Clients -->
+            <div class="checkbox-section mt-3">
+              <div class="section-subtitle">Clients (কাদের সার্ভিস দেয়া হবে):</div>
+              <div class="checkbox-row">
+                <label class="custom-checkbox"><input type="checkbox" id="cl-couples"><span>Couples</span></label>
+                <label class="custom-checkbox"><input type="checkbox" id="cl-disabled"><span>Disabled</span></label>
+                <label class="custom-checkbox"><input type="checkbox" id="cl-groups"><span>Groups/Parties</span></label>
+                <label class="custom-checkbox"><input type="checkbox" id="cl-ladies"><span>Ladies</span></label>
+                <label class="custom-checkbox"><input type="checkbox" id="cl-men" checked><span>Men</span></label>
+                <label class="custom-checkbox"><input type="checkbox" id="cl-trans"><span>Transsexuals</span></label>
+              </div>
+            </div>
+
+            <!-- Services -->
+            <div class="checkbox-section mt-3">
+              <div class="section-subtitle">Services (সার্ভিসসমূহ):</div>
+              <div class="checkbox-row">
+                <label class="custom-checkbox"><input type="checkbox" id="srv-bdsm"><span>BDSM</span></label>
+                <label class="custom-checkbox"><input type="checkbox" id="srv-bodyrub"><span>Body Rub</span></label>
+                <label class="custom-checkbox"><input type="checkbox" id="srv-full" checked><span>Full Service</span></label>
+                <label class="custom-checkbox"><input type="checkbox" id="srv-strip"><span>Strip/Dance</span></label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Part 8: Working Hours -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Part 8: Working Hours (কাজের সময়সূচী)</h3>
+          </div>
+          <div class="card-body">
+            <div class="hours-table">
+              <div class="hours-header-row">
+                <span>Day</span>
+                <span>Start Time</span>
+                <span>Finish Time</span>
+                <span>24Hr</span>
+              </div>
+              <div class="hours-rows" id="working-hours-container">
+                <!-- Injected via JavaScript for Mon-Sun -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: SETTINGS -->
+      <section id="tab-settings" class="tab-pane">
+        <div class="card">
+          <div class="card-header">
+            <h3>⚙️ City Rotation & Timing Preferences</h3>
+          </div>
+          <div class="card-body form-grid">
+            <div class="form-group">
+              <label for="conf-city-index">Next City Index Counter (পরবর্তী সিটির ইনডেক্স):</label>
+              <div class="flex-row">
+                <input type="number" id="conf-city-index" class="form-input" min="0" value="0">
+                <button id="reset-city-counter-btn" class="btn btn-secondary">Reset to 0 (1st City)</button>
+              </div>
+              <span class="text-muted text-xs">Set to 0 to restart posting from the very first USA city in the dropdown.</span>
+            </div>
+
+            <div class="form-group">
+              <label for="conf-step-delay">Step Delay (সেকেন্ড বিরতি):</label>
+              <select id="conf-step-delay" class="form-select">
+                <option value="1">1 Second (Fast)</option>
+                <option value="2" selected>2 Seconds (Recommended - Safe)</option>
+                <option value="3">3 Seconds (Relaxed)</option>
+                <option value="5">5 Seconds (Slow / High Latency)</option>
+              </select>
+            </div>
+
+            <div class="form-group full-width highlighted-box">
+              <label class="font-bold">Next Page & Image Handling (ছবি ও ফাইনাল পেজ আচরণ):</label>
+              <div class="radio-group mt-2">
+                <label class="radio-label">
+                  <input type="radio" name="image-behavior" value="auto" checked id="img-auto">
+                  <span><strong>Auto-Proceed / Publish (স্বয়ংক্রিয় কমপ্লিট)</strong> — NEXT Add Images এ ক্লিক করার পর পরবর্তী পেজে অটোম্যাটিক কমপ্লিট/পাবলিশ এ ক্লিক করে পুস্ট সম্পন্ন করবে।</span>
+                </label>
+                <label class="radio-label">
+                  <input type="radio" name="image-behavior" value="pause" id="img-pause">
+                  <span><strong>Pause on Image Upload (ছবি আপলোডের জন্য থামুন)</strong> — NEXT পেজে এসে বিরতি নেবে যাতে ইউজার ম্যানুয়ালি ছবি দিতে পারে।</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: ACTIVITY LOGS -->
+      <section id="tab-logs" class="tab-pane">
+        <div class="card">
+          <div class="card-header space-between">
+            <h3>📜 Live Automation Activity Log</h3>
+            <button id="clear-logs-btn" class="btn btn-secondary btn-sm">Clear Logs</button>
+          </div>
+          <div class="card-body p-0">
+            <div class="logs-console" id="logs-container">
+              <!-- Logs injected via JS -->
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="toast">Settings Saved!</div>
+
+  <script src="dashboard.js"></script>
+</body>
+</html>

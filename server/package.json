@@ -1,0 +1,12 @@
+{
+  "name": "secrethostess-license-server",
+  "version": "1.0.0",
+  "description": "License Verification & Credit Management API Server for SecretHostess Auto Poster Pro",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": ["license", "credits", "api"],
+  "author": "",
+  "license": "ISC"
+}

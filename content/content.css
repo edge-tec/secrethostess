@@ -1,0 +1,122 @@
+/* Floating HUD on secrethostess pages */
+#sh-auto-poster-hud {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  width: 320px;
+  background: rgba(18, 18, 24, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #f3f4f6;
+  border: 1px solid rgba(244, 63, 94, 0.4);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6), 0 0 15px rgba(225, 29, 72, 0.25);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  z-index: 9999999;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#sh-auto-poster-hud.minimized {
+  width: auto;
+  border-radius: 30px;
+}
+
+#sh-auto-poster-hud .hud-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, #e11d48, #be123c);
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  user-select: none;
+}
+
+#sh-auto-poster-hud .hud-header span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#sh-auto-poster-hud .hud-body {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#sh-auto-poster-hud .hud-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 6px;
+}
+
+#sh-auto-poster-hud .hud-label {
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+#sh-auto-poster-hud .hud-val {
+  font-weight: 600;
+  color: #38bdf8;
+  max-width: 170px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+#sh-auto-poster-hud .hud-status {
+  padding: 8px 10px;
+  background: rgba(30, 41, 59, 0.8);
+  border-left: 3px solid #f43f5e;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #e2e8f0;
+}
+
+#sh-auto-poster-hud .hud-controls {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+#sh-auto-poster-hud .hud-btn {
+  flex: 1;
+  padding: 7px 10px;
+  border-radius: 6px;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+#sh-auto-poster-hud .hud-btn-pause {
+  background: #f59e0b;
+  color: #111827;
+}
+
+#sh-auto-poster-hud .hud-btn-pause:hover {
+  background: #d97706;
+}
+
+#sh-auto-poster-hud .hud-btn-stop {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+#sh-auto-poster-hud .hud-btn-stop:hover {
+  background: #dc2626;
+}
+
+#sh-auto-poster-hud.minimized .hud-body {
+  display: none;
+}

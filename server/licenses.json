@@ -1,0 +1,26 @@
+{
+  "keys": {
+    "SHP-DEMO-8899-AABB-1122": {
+      "key": "SHP-DEMO-8899-AABB-1122",
+      "clientName": "Demo VIP User",
+      "createdAt": "2026-10-25T15:29:34.328Z",
+      "expiresAt": "2026-11-24T15:29:34.327Z",
+      "totalCredits": 100,
+      "usedCredits": 1,
+      "isUnlimited": false,
+      "active": true,
+      "notes": "Default 1-Month 100-Credits Demo Key"
+    },
+    "SHP-7160-A2B5-869E-93F7": {
+      "key": "SHP-7160-A2B5-869E-93F7",
+      "clientName": "Test Client",
+      "createdAt": "2026-10-25T15:30:01.430Z",
+      "expiresAt": "2026-11-24T15:30:01.429Z",
+      "totalCredits": 50,
+      "usedCredits": 0,
+      "isUnlimited": false,
+      "active": true,
+      "notes": "1 Month(s) - 50 Credits"
+    }
+  }
+}
