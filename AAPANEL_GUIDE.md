@@ -6,7 +6,7 @@ This guide explains step-by-step how to host the **SecretHostess License & Credi
 
 ## 📋 Prerequisites
 1. An active server with **aaPanel** installed (Ubuntu/Debian/CentOS).
-2. A Domain or Subdomain pointed to your server IP (e.g., `license.yourdomain.com`).
+2. Domain pointed to server IP: **`mailszo.com`** (DNS A-Record pointing to your aaPanel server IP).
 3. aaPanel **Node.js Version Manager** (or **PM2 Manager**) installed from aaPanel App Store.
 
 ---
@@ -24,7 +24,7 @@ This guide explains step-by-step how to host the **SecretHostess License & Credi
 
 ### Option A: Using Git Clone (Recommended)
 1. Open aaPanel **Terminal** (or SSH into your server).
-2. Navigate to your web directory:
+2. Run:
    ```bash
    cd /www/wwwroot
    git clone https://github.com/edge-tec/secrethostess.git
@@ -33,7 +33,7 @@ This guide explains step-by-step how to host the **SecretHostess License & Credi
 
 ### Option B: Upload via aaPanel File Manager
 1. In aaPanel, go to **Files** -> `/www/wwwroot/`.
-2. Create a folder (e.g., `secrethostess-license`).
+2. Create a folder named `mailszo.com` (or inside your site root).
 3. Upload the contents of the `server/` directory:
    - `server.js`
    - `package.json`
@@ -46,7 +46,7 @@ This guide explains step-by-step how to host the **SecretHostess License & Credi
 1. In aaPanel, go to **Website** -> **Node project** tab.
 2. Click **"Add Node project"**.
 3. Fill in the configuration:
-   - **Project Name:** `secrethostess-license`
+   - **Project Name:** `mailszo-license-server`
    - **Path:** `/www/wwwroot/secrethostess/server` (or the folder where `server.js` is located)
    - **Run Opt:** `npm start` (or `server.js`)
    - **Project Port:** `3000`
@@ -58,17 +58,20 @@ This guide explains step-by-step how to host the **SecretHostess License & Credi
 
 ---
 
-## 🔒 Step 4: Map Domain & Setup Free SSL (HTTPS)
+## 🔒 Step 4: Map Domain (mailszo.com) & Setup Free SSL (HTTPS)
 
-1. In the Node project list, click **"Domain"** next to your project.
-2. Add your domain name (e.g., `license.yourdomain.com`).
-3. Go to the project settings -> **SSL** tab:
+1. In the Node project list, click **"Domain"** next to `mailszo-license-server`.
+2. Add your domain name:
+   - `mailszo.com`
+   - `www.mailszo.com`
+3. Click **Submit**.
+4. Go to the project settings -> **SSL** tab:
    - Select **Let's Encrypt**.
-   - Check your domain and click **Apply**.
+   - Check `mailszo.com` and `www.mailszo.com` and click **Apply**.
    - Turn on **"Force HTTPS"**.
-4. Now your license API is securely running live at:
-   - **Public API:** `https://license.yourdomain.com/api/license/verify`
-   - **Admin Dashboard:** `https://license.yourdomain.com/admin`
+5. Now your license API is securely running live at:
+   - **Admin Dashboard:** `https://mailszo.com/admin`
+   - **Public API:** `https://mailszo.com/api/license/verify`
 
 ---
 
@@ -89,15 +92,14 @@ To set a custom admin password on aaPanel:
 
 ---
 
-## 🔌 Step 6: Connect Chrome Extension to your Live aaPanel Domain
+## 🔌 Step 6: Chrome Extension is Pre-configured for mailszo.com
 
-Once hosted, your clients can use the extension with your live server:
+The Chrome Extension is already pre-configured to default to **`https://mailszo.com`**!
 
-1. In the Chrome Extension, open **Dashboard** -> **License & Credits**.
-2. In the **"License API Server URL"** input box, enter:
-   ```text
-   https://license.yourdomain.com
-   ```
+Your clients only need to:
+1. Install/load the extension in Chrome.
+2. Open **Dashboard** -> **License & Credits**.
 3. Enter their License Key and click **"Activate & Verify"**.
 
-🎉 **Done!** You can now generate, manage, and recharge client license keys from anywhere via `https://license.yourdomain.com/admin`!
+🎉 **You're all set!** You can now manage client licenses, extend months, and recharge credits directly from:
+👉 **`https://mailszo.com/admin`**
