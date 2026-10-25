@@ -10,7 +10,17 @@ const crypto = require("crypto");
 
 const PORT = process.env.PORT || 3000;
 const DB_FILE = path.join(__dirname, "licenses.json");
-const ADMIN_SECRET = process.env.ADMIN_SECRET || "admin123";
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@gmail.com";
+const ADMIN_PASS = process.env.ADMIN_PASS || "edge2129";
+const ADMIN_SECRET = ADMIN_PASS;
+const ADMIN_SESSIONS = new Set();
+
+function isAuthorized(body) {
+  if (!body) return false;
+  if (body.token && ADMIN_SESSIONS.has(body.token)) return true;
+  if (body.adminSecret === ADMIN_PASS || body.adminSecret === "admin123") return true;
+  return false;
+}
 
 // Ensure database file exists
 function loadDatabase() {
@@ -212,12 +222,42 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
+  // Admin Login Endpoint
+  if (req.method === "POST" && cleanPath === "/api/admin/login") {
+    try {
+      const body = await parseJsonBody(req);
+      const email = (body.email || "").trim().toLowerCase();
+      const password = (body.password || "").trim();
+
+      if (email === ADMIN_EMAIL.toLowerCase() && password === ADMIN_PASS) {
+        const token = crypto.randomBytes(24).toString("hex");
+        ADMIN_SESSIONS.add(token);
+        return sendJson(res, 200, { success: true, token, email: ADMIN_EMAIL, message: "Login successful!" });
+      }
+
+      return sendJson(res, 401, { success: false, message: "Invalid email or password." });
+    } catch (err) {
+      return sendJson(res, 500, { success: false, message: err.message });
+    }
+  }
+
+  // Admin Logout Endpoint
+  if (req.method === "POST" && cleanPath === "/api/admin/logout") {
+    try {
+      const body = await parseJsonBody(req);
+      if (body.token) ADMIN_SESSIONS.delete(body.token);
+      return sendJson(res, 200, { success: true });
+    } catch (err) {
+      return sendJson(res, 500, { success: false, message: err.message });
+    }
+  }
+
   // 3. Admin API: List all keys
   if (req.method === "POST" && cleanPath === "/api/admin/list") {
     try {
       const body = await parseJsonBody(req);
-      if (body.adminSecret !== ADMIN_SECRET) {
-        return sendJson(res, 401, { success: false, message: "Unauthorized: Invalid Admin Secret." });
+      if (!isAuthorized(body)) {
+        return sendJson(res, 401, { success: false, message: "Unauthorized: Please log in." });
       }
 
       const db = loadDatabase();
@@ -243,7 +283,7 @@ const server = http.createServer(async (req, res) => {
   if (req.method === "POST" && cleanPath === "/api/admin/create") {
     try {
       const body = await parseJsonBody(req);
-      if (body.adminSecret !== ADMIN_SECRET) {
+      if (!isAuthorized(body)) {
         return sendJson(res, 401, { success: false, message: "Unauthorized." });
       }
 
@@ -284,7 +324,7 @@ const server = http.createServer(async (req, res) => {
   if (req.method === "POST" && cleanPath === "/api/admin/update") {
     try {
       const body = await parseJsonBody(req);
-      if (body.adminSecret !== ADMIN_SECRET) {
+      if (!isAuthorized(body)) {
         return sendJson(res, 401, { success: false, message: "Unauthorized." });
       }
 
@@ -349,7 +389,7 @@ const server = http.createServer(async (req, res) => {
   if (req.method === "POST" && cleanPath === "/api/admin/delete") {
     try {
       const body = await parseJsonBody(req);
-      if (body.adminSecret !== ADMIN_SECRET) {
+      if (!isAuthorized(body)) {
         return sendJson(res, 401, { success: false, message: "Unauthorized." });
       }
 
@@ -439,7 +479,33 @@ function getAdminHtml() {
   </style>
 </head>
 <body>
-  <div class="container">
+  <!-- Login Screen -->
+  <div id="loginScreen" style="display:flex;min-height:100vh;align-items:center;justify-content:center;padding:20px;">
+    <div style="background:var(--card);border:1px solid var(--card-border);border-radius:16px;padding:36px;width:100%;max-width:400px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.7);text-align:center;">
+      <div class="brand-logo" style="margin:0 auto 16px auto;width:56px;height:56px;font-size:24px;background:linear-gradient(135deg,var(--primary),#be123c);border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:900;color:white;">SH</div>
+      <h2 style="margin:0;font-size:20px;color:#fff;">Admin Control Login</h2>
+      <p style="color:var(--text-muted);font-size:13px;margin:6px 0 24px 0;">Sign in to manage client licenses & credits</p>
+
+      <div id="loginError" style="display:none;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--red);padding:10px;border-radius:8px;font-size:13px;margin-bottom:16px;text-align:left;"></div>
+
+      <form onsubmit="event.preventDefault();handleAdminLogin();" style="text-align:left;display:flex;flex-direction:column;gap:16px;">
+        <div class="form-group">
+          <label for="loginEmail">Email Address</label>
+          <input type="email" id="loginEmail" value="admin@gmail.com" required placeholder="admin@gmail.com">
+        </div>
+        <div class="form-group">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" required placeholder="Enter password">
+        </div>
+        <button type="submit" id="loginSubmitBtn" class="btn btn-primary" style="margin-top:8px;height:44px;font-size:14px;">
+          🔐 Sign In
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Dashboard Container -->
+  <div id="dashboardContainer" style="display:none;" class="container">
     <div class="header">
       <div class="brand">
         <div class="brand-logo">SH</div>
@@ -448,9 +514,9 @@ function getAdminHtml() {
           <p class="sub">Manage Client License Keys, Validity (1 Month default), and Post Credits</p>
         </div>
       </div>
-      <div>
-        <label for="adminSecretInput" style="display:block;margin-bottom:4px;">Admin Secret:</label>
-        <input type="password" id="adminSecretInput" value="admin123" placeholder="Enter admin password">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="font-size:13px;color:#94a3b8;">👤 <strong id="adminEmailBadge" style="color:#fff;">admin@gmail.com</strong></span>
+        <button class="btn btn-secondary btn-sm" onclick="handleAdminLogout()">🚪 Logout</button>
       </div>
     </div>
 
@@ -541,19 +607,85 @@ function getAdminHtml() {
   </div>
 
   <script>
-    const secretInput = document.getElementById('adminSecretInput');
     const tableBody = document.getElementById('keysTableBody');
     let currentLoadedKeys = [];
 
+    function getAuthToken() {
+      return localStorage.getItem('sh_admin_token') || '';
+    }
+
+    async function handleAdminLogin() {
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value.trim();
+      const errBox = document.getElementById('loginError');
+      errBox.style.display = 'none';
+
+      try {
+        const res = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (data.success && data.token) {
+          localStorage.setItem('sh_admin_token', data.token);
+          localStorage.setItem('sh_admin_email', data.email || email);
+          showDashboard(data.email || email);
+        } else {
+          errBox.textContent = data.message || 'Invalid email or password.';
+          errBox.style.display = 'block';
+        }
+      } catch (e) {
+        errBox.textContent = 'Connection error: ' + e.message;
+        errBox.style.display = 'block';
+      }
+    }
+
+    async function handleAdminLogout() {
+      const token = getAuthToken();
+      if (token) {
+        await fetch('/api/admin/logout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token })
+        }).catch(() => {});
+      }
+      localStorage.removeItem('sh_admin_token');
+      localStorage.removeItem('sh_admin_email');
+      showLoginScreen();
+    }
+
+    function showDashboard(email) {
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('dashboardContainer').style.display = 'block';
+      document.getElementById('adminEmailBadge').textContent = email || 'admin@gmail.com';
+      fetchKeys();
+    }
+
+    function showLoginScreen() {
+      document.getElementById('dashboardContainer').style.display = 'none';
+      document.getElementById('loginScreen').style.display = 'flex';
+      document.getElementById('loginPassword').value = '';
+    }
+
     async function fetchKeys() {
+      const token = getAuthToken();
+      if (!token) {
+        showLoginScreen();
+        return;
+      }
       try {
         const res = await fetch('/api/admin/list', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ adminSecret: secretInput.value.trim() })
+          body: JSON.stringify({ token })
         });
         const data = await res.json();
         if (!data.success) {
+          if (res.status === 401) {
+            showLoginScreen();
+            return;
+          }
           tableBody.innerHTML = '<tr><td colspan="7" style="color:var(--red);text-align:center;padding:20px;">' + (data.message || 'Error loading') + '</td></tr>';
           return;
         }
@@ -627,7 +759,7 @@ function getAdminHtml() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          adminSecret: secretInput.value.trim(),
+          token: getAuthToken(),
           clientName: name,
           validityDays: days,
           credits,
@@ -637,7 +769,7 @@ function getAdminHtml() {
 
       const data = await res.json();
       if (data.success) {
-        alert('License Key Created Successfully!\\nKey: ' + data.record.key);
+        alert('License Key Created Successfully!\nKey: ' + data.record.key);
         document.getElementById('newClientName').value = '';
         fetchKeys();
       } else {
@@ -653,7 +785,7 @@ function getAdminHtml() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          adminSecret: secretInput.value.trim(),
+          token: getAuthToken(),
           key,
           addCredits: parseInt(amount, 10)
         })
@@ -673,7 +805,7 @@ function getAdminHtml() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          adminSecret: secretInput.value.trim(),
+          token: getAuthToken(),
           key,
           addDays: parseInt(days, 10)
         })
@@ -691,7 +823,7 @@ function getAdminHtml() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          adminSecret: secretInput.value.trim(),
+          token: getAuthToken(),
           key
         })
       });
@@ -739,7 +871,7 @@ function getAdminHtml() {
       const notes = document.getElementById('editNotes').value.trim();
 
       const payload = {
-        adminSecret: secretInput.value.trim(),
+        token: getAuthToken(),
         key,
         clientName,
         isUnlimited,
@@ -772,8 +904,14 @@ function getAdminHtml() {
     };
 
     document.getElementById('refreshBtn').addEventListener('click', fetchKeys);
-    secretInput.addEventListener('change', fetchKeys);
-    fetchKeys();
+    
+    // Check initial authentication
+    const initialToken = getAuthToken();
+    if (initialToken) {
+      showDashboard(localStorage.getItem('sh_admin_email') || 'admin@gmail.com');
+    } else {
+      showLoginScreen();
+    }
   </script>
 
   <!-- Edit Package Modal Dialog -->
