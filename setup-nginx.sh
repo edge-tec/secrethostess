@@ -1,8 +1,23 @@
 #!/bin/bash
 set -e
 
-echo "Applying clean Nginx config for mailszo.com..."
+echo "1. Downloading latest server.js into /www/wwwroot/mailszo.com..."
+mkdir -p /www/wwwroot/mailszo.com
+curl -sL https://raw.githubusercontent.com/edge-tec/secrethostess/main/server/server.js -o /www/wwwroot/mailszo.com/server.js
+curl -sL https://raw.githubusercontent.com/edge-tec/secrethostess/main/server/package.json -o /www/wwwroot/mailszo.com/package.json
 
+echo "2. Restarting PM2 license server..."
+cd /www/wwwroot/mailszo.com
+pm2 delete all || true
+pm2 start server.js --name "license-server"
+pm2 save
+
+sleep 2
+
+echo "3. Testing local server on port 3000..."
+curl -s http://127.0.0.1:3000/admin | grep -i "SecretHostess" && echo "Local Node server OK!"
+
+echo "4. Updating Nginx config for mailszo.com..."
 cat << 'CONF' > /www/server/panel/vhost/nginx/mailszo.com.conf
 server
 {
@@ -51,6 +66,6 @@ nginx -t
 nginx -s reload
 
 echo "=========================================================="
-echo "🎉 SUCCESS! Nginx reloaded! WordPress completely removed."
-echo "👉 Test now at: https://mailszo.com/admin"
+echo "🎉 SUCCESS! Mailszo.com is 100% running SecretHostess License Server!"
+echo "👉 Open now in Incognito: https://mailszo.com/admin"
 echo "=========================================================="

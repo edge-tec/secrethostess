@@ -97,9 +97,10 @@ const server = http.createServer(async (req, res) => {
 
   const url = new URL(req.url, `http://${req.headers.host}`);
   const pathname = url.pathname;
+  const cleanPath = pathname.replace(/\/+$/, "") || "/";
 
   // 1. API: Verify License Key
-  if (req.method === "POST" && pathname === "/api/license/verify") {
+  if (req.method === "POST" && (cleanPath === "/api/license/verify")) {
     try {
       const body = await parseJsonBody(req);
       const key = (body.key || body.licenseKey || "").trim().toUpperCase();
@@ -167,7 +168,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   // 2. API: Consume 1 Credit after successful post
-  if (req.method === "POST" && pathname === "/api/license/consume-credit") {
+  if (req.method === "POST" && cleanPath === "/api/license/consume-credit") {
     try {
       const body = await parseJsonBody(req);
       const key = (body.key || body.licenseKey || "").trim().toUpperCase();
@@ -212,7 +213,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   // 3. Admin API: List all keys
-  if (req.method === "POST" && pathname === "/api/admin/list") {
+  if (req.method === "POST" && cleanPath === "/api/admin/list") {
     try {
       const body = await parseJsonBody(req);
       if (body.adminSecret !== ADMIN_SECRET) {
@@ -239,7 +240,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   // 4. Admin API: Create new key
-  if (req.method === "POST" && pathname === "/api/admin/create") {
+  if (req.method === "POST" && cleanPath === "/api/admin/create") {
     try {
       const body = await parseJsonBody(req);
       if (body.adminSecret !== ADMIN_SECRET) {
@@ -280,7 +281,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   // 5. Admin API: Update key (recharge credits, extend validity, toggle active)
-  if (req.method === "POST" && pathname === "/api/admin/update") {
+  if (req.method === "POST" && cleanPath === "/api/admin/update") {
     try {
       const body = await parseJsonBody(req);
       if (body.adminSecret !== ADMIN_SECRET) {
@@ -331,7 +332,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   // 6. Admin API: Delete key
-  if (req.method === "POST" && pathname === "/api/admin/delete") {
+  if (req.method === "POST" && cleanPath === "/api/admin/delete") {
     try {
       const body = await parseJsonBody(req);
       if (body.adminSecret !== ADMIN_SECRET) {
@@ -350,8 +351,9 @@ const server = http.createServer(async (req, res) => {
   }
 
   // 7. Admin Web Dashboard Interface
-  if (req.method === "GET" && (pathname === "/" || pathname === "/admin")) {
+  if ((req.method === "GET" || req.method === "HEAD") && (cleanPath === "/" || cleanPath === "/admin" || cleanPath === "/dashboard")) {
     res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+    if (req.method === "HEAD") return res.end();
     return res.end(getAdminHtml());
   }
 
