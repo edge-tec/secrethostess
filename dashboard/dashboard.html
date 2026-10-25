@@ -195,8 +195,8 @@
 
             <div class="form-group">
               <label for="lic-server-url">License Server API URL:</label>
-              <input type="text" id="lic-server-url" class="form-input" value="https://mailszo.com" placeholder="https://mailszo.com or http://localhost:3000">
-              <span class="text-muted text-xs">Default production server is https://mailszo.com (or local http://localhost:3000)</span>
+              <input type="text" id="lic-server-url" class="form-input" value="https://bot.mailszo.com" placeholder="https://bot.mailszo.com or http://localhost:3000">
+              <span class="text-muted text-xs">Default production server is https://bot.mailszo.com (or local http://localhost:3000)</span>
             </div>
 
             <div class="form-group" style="justify-content: flex-end;">
@@ -224,7 +224,7 @@
               <h3>👑 Admin License Control Portal (এডমিন লাইসেন্স ও ক্রেডিট কন্ট্রোল)</h3>
               <span class="card-hint">এডমিন হিসেবে নতুন লাইসেন্স কি তৈরি, মেয়াদ (১ মাস/কাস্টম) দেওয়া এবং ক্রেডিট রিচার্জ করার গাইড।</span>
             </div>
-            <a href="https://mailszo.com/admin" target="_blank" class="btn btn-secondary btn-sm" id="open-admin-portal-btn">
+            <a href="https://bot.mailszo.com/admin" target="_blank" class="btn btn-secondary btn-sm" id="open-admin-portal-btn">
               🌐 Open Admin Portal (Web UI)
             </a>
           </div>
@@ -233,7 +233,7 @@
               <p><strong>এডমিন যেভাবে লাইসেন্স কি ও ক্রেডিট পরিচালনা করবেন:</strong></p>
               <ol style="margin-left: 20px; margin-top: 8px;">
                 <li>aaPanel বা সার্ভারে রান করুন: <code>node server/server.js</code>।</li>
-                <li>যেকোনো ব্রাউজারে যান: <strong><a href="https://mailszo.com/admin" target="_blank" style="color:#38bdf8;" id="admin-portal-link">https://mailszo.com/admin</a></strong> (অথবা লোকালহোস্টে: <code>http://localhost:3000/admin</code>, এডমিন পাসওয়ার্ড: <code>admin123</code>)।</li>
+                <li>যেকোনো ব্রাউজারে যান: <strong><a href="https://bot.mailszo.com/admin" target="_blank" style="color:#38bdf8;" id="admin-portal-link">https://bot.mailszo.com/admin</a></strong> (অথবা লোকালহোস্টে: <code>http://localhost:3000/admin</code>, এডমিন পাসওয়ার্ড: <code>admin123</code>)।</li>
                 <li><strong>নতুন কি তৈরি (Generate Key):</strong> ক্লায়েন্টের নাম, মেয়াদ (১ মাস, ২ মাস, ১ বছর) এবং ক্রেডিট (যেমন: ৫০, ১০০, ৫০০ বা আনলিমিটেড) নির্ধারণ করে <em>Generate License Key</em> এ ক্লিক করলেই সাথে সাথে কিউআর ও কোড কি তৈরি হবে।</li>
                 <li><strong>ক্রেডিট রিচার্জ (Recharge Credits):</strong> ক্লায়েন্টের ক্রেডিট শেষ হয়ে গেলে এডমিন পোর্টাল থেকে এক ক্লিকে <strong>+ Credits</strong> দিয়ে ৫০ বা ১০০ ক্রেডিট যুক্ত করে দিতে পারবেন।</li>
                 <li><strong>মেয়াদ বাড়ানো (Extend Expiry):</strong> ক্লায়েন্টের ১ মাস শেষ হলে <strong>+30 Days</strong> বাটনে ক্লিক করে মেয়াদ ১ মাস করে বাড়িয়ে দেওয়া যাবে।</li>

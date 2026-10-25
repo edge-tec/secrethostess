@@ -325,7 +325,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Populate License Fields
     const lic = currentState.license || {};
     licKeyInput.value = lic.key || "";
-    licServerUrl.value = lic.serverUrl || "https://mailszo.com";
+    licServerUrl.value = lic.serverUrl || "https://bot.mailszo.com";
   }
 
   // Render Global Status & Metrics

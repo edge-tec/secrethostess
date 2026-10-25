@@ -65,7 +65,7 @@ const DEFAULT_SETTINGS = {
     }
   },
   license: {
-    serverUrl: "https://mailszo.com",
+    serverUrl: "https://bot.mailszo.com",
     key: "SHP-DEMO-8899-AABB-1122",
     isValid: false,
     daysRemaining: 30,
@@ -111,7 +111,7 @@ async function verifyLicense(keyOverride, serverUrlOverride) {
   const state = await getState();
   const lic = state.license || DEFAULT_SETTINGS.license;
   const key = (keyOverride || lic.key || "").trim().toUpperCase();
-  const serverUrl = (serverUrlOverride || lic.serverUrl || "https://mailszo.com").replace(/\/+$/, "");
+  const serverUrl = (serverUrlOverride || lic.serverUrl || "https://bot.mailszo.com").replace(/\/+$/, "");
 
   if (!key) {
     const updated = { ...lic, isValid: false, message: "No license key provided." };
@@ -172,7 +172,7 @@ async function verifyLicense(keyOverride, serverUrlOverride) {
 async function consumeCredit(count = 1) {
   const state = await getState();
   const lic = state.license || DEFAULT_SETTINGS.license;
-  const serverUrl = (lic.serverUrl || "https://mailszo.com").replace(/\/+$/, "");
+  const serverUrl = (lic.serverUrl || "https://bot.mailszo.com").replace(/\/+$/, "");
   const key = (lic.key || "").trim().toUpperCase();
 
   if (!key) return { success: false, message: "No license key" };
